@@ -69,7 +69,7 @@ void setup() {
                           NULL,
                           app_cpu);
 
-  xSemaphoreTake(mutex, 10); //This assumes blinkLED() will start within 10ms.
+  xSemaphoreTake(mutex, 10); //This assumes blinkLED() will start and return mutex within 10ms.
   // Show that we accomplished our task of passing the stack-based argument
   Serial.println("Done!");
 }
