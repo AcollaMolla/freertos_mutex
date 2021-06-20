@@ -7,20 +7,20 @@
 
 // Pins (change this if your Arduino board does not have LED_BUILTIN defined)
 static const int led_pin = LED_BUILTIN;
+static SemaphoreHandle_t mutex;
 
 //*****************************************************************************
 // Tasks
 
 // Blink LED based on rate passed by parameter
 void blinkLED(void *parameters) {
-
   // Copy the parameter into a local variable
   int num = *(int *)parameters;
 
   // Print the parameter
   Serial.print("Received: ");
   Serial.println(num);
-
+  xSemaphoreGive(mutex);
   // Configure the LED pin
   pinMode(led_pin, OUTPUT);
 
@@ -42,6 +42,7 @@ void setup() {
 
   // Configure Serial
   Serial.begin(115200);
+  mutex = xSemaphoreCreateMutex();
 
   // Wait a moment to start (so we don't miss Serial output)
   vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -55,7 +56,9 @@ void setup() {
   // Read integer value
   delay_arg = Serial.parseInt();
   Serial.print("Sending: ");
-  Serial.println(delay_arg);
+  Serial.println(delay_arg); 
+
+  xSemaphoreTake(mutex,0);
 
   // Start task 1
   xTaskCreatePinnedToCore(blinkLED,
@@ -66,6 +69,7 @@ void setup() {
                           NULL,
                           app_cpu);
 
+  xSemaphoreTake(mutex, 10); //This assumes blinkLED() will start within 10ms.
   // Show that we accomplished our task of passing the stack-based argument
   Serial.println("Done!");
 }
